@@ -16,7 +16,7 @@ class Contact(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updateded_at = models.DateTimeField(auto_now_add=True)
-    deleted_at = models.DateTimeField(auto_now_add=True, null=True)
+    deleted_at = models.DateTimeField(null=True)
 
     def __str__(self):
         return f"{self.email=}, {self.phone_number=}"
