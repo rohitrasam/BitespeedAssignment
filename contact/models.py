@@ -15,7 +15,7 @@ class Contact(models.Model):
         max_length=20, choices=Precedence.choices, default=Precedence.PRIMARY
     )
     createdAt = models.DateTimeField(auto_now_add=True)
-    updatededAt = models.DateTimeField(auto_now_add=True)
+    updatededAt = models.DateTimeField(auto_now=True)
     deletedAt = models.DateTimeField(null=True)
 
     def __str__(self):
