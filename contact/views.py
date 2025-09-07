@@ -13,20 +13,41 @@ class AddContactAPIView(CreateAPIView):
         serialized_data: IncomingDetailsSerializer = IncomingDetailsSerializer(
             data=request.data
         )
-        if serialized_data.is_valid():
+        if serialized_data.is_valid(raise_exception=True):
             contact = Contact.objects.filter(
-                (
-                    Q(email=serialized_data.validated_data["email"])
-                    | Q(phoneNumber=serialized_data.validated_data["phoneNumber"])
-                )
-                & Q(linkPrecedence=Contact.Precedence.PRIMARY)
-            ).first()
-            if not contact:
-                Contact.objects.create(
-                    **serialized_data, linkPrecedence=Contact.Precedence.PRIMARY
-                )
+                email=serialized_data.data["email"],
+                phoneNumber=serialized_data.data["phoneNumber"],
+            )
+            print(contact)
+            if contact.exists():
+                return Response({"contact": ContactDetailsSerializer(contact).data})
 
-                return Response()
+            contact = Contact.objects.filter(
+                Q(email=serialized_data.validated_data["email"])
+                | Q(phoneNumber=serialized_data.validated_data["phoneNumber"])
+            )
+            if not contact.exists():
+                if (
+                    not serialized_data.data["email"] or 
+                    not serialized_data.data["phoneNumber"]
+                ):
+                    return Response(
+                        {
+                            "contact": ContactDetailsSerializer(
+                                contact.filter(
+                                    linkPrecedence=Contact.Precedence.PRIMARY
+                                )
+                            ).data
+                        }
+                    )
+
+                contact = Contact.objects.create(
+                    **serialized_data.validated_data,
+                    linkPrecedence=Contact.Precedence.PRIMARY,
+                )
+                
+                res_data: ContactDetailsSerializer = ContactDetailsSerializer(contact)
+                return Response({"contact": res_data.data})
 
             secondary_contact = Contact.objects.create(
                 **serialized_data.validated_data,
@@ -35,3 +56,5 @@ class AddContactAPIView(CreateAPIView):
             )
             res_data: ContactDetailsSerializer = ContactDetailsSerializer(contact)
             return Response({"contact": res_data.data})
+
+        return Response({"message": "Validation errors"})
