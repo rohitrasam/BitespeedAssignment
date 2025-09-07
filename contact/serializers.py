@@ -3,8 +3,9 @@ from .models import Contact
 
 
 class IncomingDetailsSerializer(serializers.Serializer):
-    email = serializers.EmailField(allow_blank=True)
+    email = serializers.EmailField(allow_null=True, allow_blank=True)
     phoneNumber = serializers.CharField(
+        allow_null=True,
         max_length=20,
         allow_blank=True,
     )
@@ -22,10 +23,14 @@ class ContactDetailsSerializer(serializers.ModelSerializer):
 
 
     def get_emails(self, obj: Contact):
-        return Contact.objects.filter(linkedId=obj.id).values_list("email")
+        emails = set(Contact.objects.filter(linkedId=obj.id).values_list("email", flat=True))
+        emails.add(obj.email)
+        return emails
 
     def get_phoneNumbers(self, obj: Contact):
-        return Contact.objects.filter(linkedId=obj.id).values_list("phoneNumber")
+        phoneNumbers = set(Contact.objects.filter(linkedId=obj.id).values_list("phoneNumber", flat=True))
+        phoneNumbers.add(obj.phoneNumber)
+        return phoneNumbers
 
     def get_secondaryContactIds(self, obj: Contact):
-        return Contact.objects.filter(linkedId=obj.id).values_list("linkedId")
+        return set(Contact.objects.filter(linkedId=obj.id).values_list("id", flat=True))
